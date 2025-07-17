@@ -1,24 +1,57 @@
-import { CosmosClient } from "@azure/cosmos";
-import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
+import {
+  app,
+  HttpRequest,
+  HttpResponseInit,
+  InvocationContext,
+} from "@azure/functions";
+import { tasksContainer } from "../lib/cosmosClient";
 
-export async function BulkDeleteTasks(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
-    context.log(`Http function processed request for url "${request.url}"`);
-    const body = await request.json() as string[];
-    const organizationId = request.query.get('organizationId');
+export async function BulkDeleteTasks(
+  request: HttpRequest,
+  context: InvocationContext
+): Promise<HttpResponseInit> {
+  const organizationId = request.query.get("organizationId");
 
-    const client = new CosmosClient("this is a connection string");
-    body.forEach(async element => {
-        await client.database("TaskApp")
-        .container("Tasks")
-        .item(element, organizationId)
-        .delete();
-    });
+  if (!organizationId) {
+    return {
+      status: 400,
+      jsonBody: { error: "'organizationId' is required." },
+    };
+  }
 
-    return { status: 200 };
-};
+  try {
+    const taskIdsToDelete = (await request.json()) as string[];
 
-app.http('BulkDeleteTasks', {
-    methods: ['DELETE'],
-    authLevel: 'anonymous',
-    handler: BulkDeleteTasks
+    if (!Array.isArray(taskIdsToDelete) || taskIdsToDelete.length === 0) {
+      return {
+        status: 400,
+        jsonBody: {
+          error: "Request body must be a non-empty array of task IDs.",
+        },
+      };
+    }
+
+    const deletePromises = taskIdsToDelete.map((id) =>
+      tasksContainer.item(id, organizationId).delete()
+    );
+
+    await Promise.all(deletePromises);
+
+    return { status: 204 };
+  } catch (error) {
+    context.error("Error in bulk delete:", error);
+    return {
+      status: 500,
+      jsonBody: {
+        error:
+          "An error occurred during bulk deletion. Some tasks may not have been deleted.",
+      },
+    };
+  }
+}
+
+app.http("BulkDeleteTasks", {
+  methods: ["DELETE"],
+  authLevel: "anonymous",
+  handler: BulkDeleteTasks,
 });

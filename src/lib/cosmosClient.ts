@@ -11,4 +11,6 @@ const client = new CosmosClient(connectionString);
 const database = client.database("TaskApp");
 export const tasksContainer = database.container("Tasks");
 
+export const formSettingsContainer = database.container("FormSettings");
+
 export default client;

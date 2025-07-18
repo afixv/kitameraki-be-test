@@ -22,7 +22,16 @@ export async function UpdateTask(
   }
 
   try {
-    const body = await request.json();
+    interface TaskUpdateBody {
+      title?: string;
+      description?: string;
+      dueDate?: string;
+      priority?: string;
+      status?: string;
+      tags?: string[];
+      customFields?: any;
+    }
+    const body = (await request.json()) as TaskUpdateBody;
     const patchOperations: PatchOperation[] = [];
 
     const updatableFields = [
@@ -42,6 +51,14 @@ export async function UpdateTask(
           value: body[field],
         });
       }
+    }
+
+    if (body.hasOwnProperty("customFields")) {
+      patchOperations.push({
+        op: "replace",
+        path: `/customFields`,
+        value: body.customFields,
+      });
     }
 
     if (patchOperations.length === 0) {

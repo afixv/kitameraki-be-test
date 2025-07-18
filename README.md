@@ -1,46 +1,83 @@
-## 🚀 Memulai Proyek Secara Lokal
+# Task Management API - Backend
 
-Ikuti langkah-langkah ini untuk menjalankan proyek di mesin lokal Anda.
+This is the project backend for the Task Management application, built using **Azure Functions** and **TypeScript**. It provides a powerful, multi-tenant API for a highly customizable task management system, using **Azure Cosmos DB** as its database.
 
-### 1. Prasyarat
+This project is composed of two core services:
+1.  A robust **Task Management API** for all standard CRUD operations on tasks.
+2.  A **Dynamic Form Builder API** that allows users to define custom form layouts, which are then used to create and display tasks.
 
-Pastikan Anda telah menginstal perangkat lunak berikut:
+The project has been architected with a focus on security, readability, and maintainability.
 
--   [**Node.js**](https://nodejs.org/) (versi LTS, 18.x atau lebih tinggi direkomendasikan).
--   [**Azure Functions Core Tools**](https://github.com/Azure/azure-functions-core-tools) (v4). Anda bisa menginstalnya secara global melalui npm:
+## ✨ Features
+
+-   **Serverless Architecture:** Built on Azure Functions for automatic scaling and cost-effective performance.
+-   **Full CRUD for Tasks:** Comprehensive operations for creating, reading, updating, and deleting tasks.
+-   **Dynamic Form Customization:**
+    -   Endpoints to store and retrieve complex, multi-column form layouts.
+    -   Allows the frontend to build a drag-and-drop form editor.
+-   **Custom Data Storage:** Tasks can store data for any custom fields defined in the form layout.
+-   **Multi-Tenancy Support:** All data (Tasks and Form Settings) is partitioned by `organizationId`, ensuring strict data isolation.
+-   **Secure by Design:** No hardcoded secrets. Configuration is loaded from environment variables (`local.settings.json` for local development).
+-   **Maintainable Code:** Utilizes a centralized database client (DRY principle) and robust error handling for clear and predictable API responses.
+
+## 🛠️ Technology Stack
+
+-   **Runtime:** Node.js v18+
+-   **Framework:** Azure Functions v4
+-   **Language:** TypeScript 5.x
+-   **Database:** Azure Cosmos DB (for NoSQL)
+-   **Dependencies Utama:**
+    -   `@azure/functions`: Core SDK for Azure Functions.
+    -   `@azure/cosmos`: Official client for Azure Cosmos DB.
+    -   `uuid`: For generating unique, secure IDs.
+
+## 🚀 Getting Started Locally
+
+Follow these steps to run the project on your local machine for development.
+
+### 1. Prerequisites
+
+-   [**Node.js**](https://nodejs.org/) (version 18.x or higher).
+-   [**Azure Functions Core Tools**](https://github.com/Azure/azure-functions-core-tools) (v4). Install globally via npm:
     ```bash
     npm install -g azure-functions-core-tools@4 --unsafe-perm true
-    ```-   [**Akun Azure**](https://azure.microsoft.com/free/) dengan langganan aktif.
--   **Instansi Azure Cosmos DB** yang sudah dibuat. (Lihat langkah 3b).
+    ```
+-   [**An Azure Account**](https://azure.microsoft.com/free/) with an active subscription.
+-   An **Azure Cosmos DB** instance (see step 3b).
 
-### 2. Kloning Repository
+### 2. Clone the Repository
 
 ```bash
-git clone <URL_REPOSITORY_ANDA>
-cd <NAMA_FOLDER_PROYEK>
+git clone https://github.com/afixv/kitameraki-be-test/
+cd kitameraki-be-test
 ```
 
-### 3. Instalasi dan Konfigurasi
+### 3. Installation and Configuration
 
-**a. Instal Dependensi Proyek**
-Jalankan perintah berikut di root proyek:
+**a. Install Dependencies**
 ```bash
 npm install
 ```
 
-**b. Siapkan Azure Cosmos DB**
-Proyek ini memerlukan koneksi ke database Cosmos DB.
-1.  Di Portal Azure, buat sumber daya **Azure Cosmos DB for NoSQL**.
-2.  Selama pembuatan, pilih mode kapasitas **Serverless** (ideal untuk development).
-3.  Setelah sumber daya dibuat, buka **Data Explorer**.
-4.  Buat database baru dengan ID: `TaskApp`.
-5.  Buat container baru dengan ID: `Tasks`.
-6.  Untuk **Partition key**, masukkan nilai berikut: `/organizationId`. Langkah ini **sangat penting** agar API berfungsi dengan benar.
+**b. Setup Azure Cosmos DB**
+This project requires **two** separate containers within the same database.
 
-**c. Konfigurasi Koneksi Lokal**
-1.  Di Portal Azure, navigasikan ke sumber daya Cosmos DB Anda, lalu ke bagian **Keys**. Salin nilai **PRIMARY CONNECTION STRING**.
-2.  Di root proyek Anda, buat file baru bernama `local.settings.json`.
-3.  Salin dan tempel konten berikut ke dalam file tersebut, ganti placeholder dengan connection string Anda.
+1.  In the Azure Portal, create an **Azure Cosmos DB for NoSQL** resource. Choose the **Serverless** capacity mode for development.
+2.  Once created, go to **Data Explorer**.
+3.  Create a new database with the ID: `TaskApp`.
+4.  **Create the `Tasks` Container:**
+    -   Container ID: `Tasks`
+    -   Partition key: `/organizationId`
+5.  **Create the `FormSettings` Container:**
+    -   Container ID: `FormSettings`
+    -   Partition key: `/organizationId`
+
+    *Note: Correctly setting the partition key for both containers is **critical** for the API to function.*
+
+**c. Configure Local Connection**
+1.  In the Azure Portal, navigate to your Cosmos DB resource and copy the **PRIMARY CONNECTION STRING** from the **"Keys"** section.
+2.  In the root of your local project, create a file named `local.settings.json`.
+3.  Paste the following content into the file, replacing the placeholder with your connection string.
 
     ```json
     {
@@ -48,47 +85,39 @@ Proyek ini memerlukan koneksi ke database Cosmos DB.
       "Values": {
         "AzureWebJobsStorage": "",
         "FUNCTIONS_WORKER_RUNTIME": "node",
-        "CosmosDbConnectionString": "PASTE_YOUR_COSMOS_DB_CONNECTION_STRING_HERE"
+        "AccountEndpoint=https://your-db.documents.azure.com:443/;AccountKey=yourPrimaryKey==;"
       }
     }
     ```
-    *Catatan: File `local.settings.json` sudah ada di dalam `.gitignore` untuk mencegah rahasia Anda bocor ke source control.*
+    *This file is included in `.gitignore` to prevent committing secrets to source control.*
+    
+**d. Alternate: Use Provided Database for Testing**    
+If you prefer not to create your own Azure Cosmos DB, you can use a pre-configured connection string for development or testing purposes. Please refer to the details I’ve included in the email attachment.
 
-### 4. Menjalankan Aplikasi
+### 4. Running the Application
 
-Setelah semua konfigurasi selesai, jalankan aplikasi dengan perintah:
-
+After completing the configuration, start the local development server:
 ```bash
 npm start
 ```
+The terminal will display a list of all available HTTP endpoints, typically running on `http://localhost:7071`. The backend is now ready to accept requests from the frontend or an API client like Postman.
 
-Perintah ini akan secara otomatis:
-1.  Menjalankan `npm run clean` untuk membersihkan direktori `dist`.
-2.  Menjalankan `npm run build` untuk meng-compile kode TypeScript ke JavaScript.
-3.  Memulai host Azure Functions secara lokal.
+## 📖 API Endpoint Documentation
 
-Anda akan melihat daftar endpoint HTTP yang tersedia di terminal, biasanya berjalan di `http://localhost:7071`.
+### Form Settings Endpoints
 
-```
-Functions:
-
-        BulkDeleteTasks: [DELETE] http://localhost:7071/api/BulkDeleteTasks
-        DeleteTask: [DELETE] http://localhost:7071/api/DeleteTask
-        GetTask: [GET] http://localhost:7071/api/GetTask
-        GetTasks: [GET] http://localhost:7071/api/GetTasks
-        InsertTask: [POST] http://localhost:7071/api/InsertTask
-        UpdateTask: [POST,PATCH] http://localhost:7071/api/UpdateTask
-```
-
-Aplikasi backend Anda sekarang siap menerima permintaan!
-
-## 📖 Dokumentasi API Endpoints
-
-| Endpoint | Method | Deskripsi | Query Parameters | Request Body (JSON) |
+| Endpoint | Method | Description | Query Parameters | Request Body (JSON) |
 | :--- | :--- | :--- | :--- | :--- |
-| `/api/InsertTask` | `POST` | Membuat tugas baru. | `organizationId` | `{ "title": "string", "description": "string", ... }` |
-| `/api/GetTasks` | `GET` | Mendapatkan semua tugas untuk sebuah organisasi. | `organizationId` | (kosong) |
-| `/api/GetTask` | `GET` | Mendapatkan detail satu tugas. | `id`, `organizationId` | (kosong) |
-| `/api/UpdateTask` | `PATCH`, `POST` | Memperbarui sebagian atau seluruh data tugas. | `id`, `organizationId` | `{ "title": "string", "status": "completed", ... }` |
-| `/api/DeleteTask` | `DELETE` | Menghapus satu tugas. | `id`, `organizationId` | (kosong) |
-| `/api/BulkDeleteTasks`| `DELETE` | Menghapus beberapa tugas sekaligus. | `organizationId` | `[ "id1", "id2", "id3" ]` |
+| `/api/GetFormSettings` | `GET` | Retrieves the form layout for an organization. Returns a default empty layout if none exists. | `organizationId` | (empty) |
+| `/api/UpdateFormSettings`| `PUT`, `POST` | Creates or updates the form layout for an organization. | `organizationId` | `{ "id": "...", "layout": [...] }` |
+
+### Task Endpoints
+
+| Endpoint | Method | Description | Query Parameters | Request Body (JSON) |
+| :--- | :--- | :--- | :--- | :--- |
+| `/api/InsertTask` | `POST` | Creates a new task, including any custom field data. | `organizationId` | `{ "title": "...", ..., "customFields": { "field_id_1": "value1" } }` |
+| `/api/GetTasks` | `GET` | Gets a paginated and filterable list of tasks. | `organizationId`, `status`, `priority`, `searchTerm`, `page`, `pageSize` | (empty) |
+| `/api/GetTask` | `GET` | Gets the details of a single task. | `id`, `organizationId` | (empty) |
+| `/api/UpdateTask` | `PATCH`, `POST` | Updates a task's standard and/or custom fields. | `id`, `organizationId` | `{ "status": "completed", "customFields": { "field_id_1": "new_value" } }` |
+| `/api/DeleteTask` | `DELETE` | Deletes a single task. | `id`, `organizationId` | (empty) |
+| `/api/BulkDeleteTasks`| `DELETE` | Deletes multiple tasks at once. | `organizationId` | `[ "id1", "id2" ]` |
